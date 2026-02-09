@@ -61,6 +61,16 @@ Renders an LDraw part as an SVG line drawing.
 | `partNumber` | string | yes | | LDraw part number (e.g. `"3001"`, `"3062b"`) |
 | `thickness` | float | no | `2.0` | Line thickness in pixels (0.5 - 20.0) |
 
+The following values are currently hardcoded and not yet configurable via the API ([#2](https://github.com/breckenedge/lego-part-renderer/issues/2)):
+
+| Setting | Value |
+|---------|-------|
+| Camera latitude | 30° |
+| Camera longitude | 45° |
+| Resolution | 1024x1024 |
+| Camera padding | 0.03 |
+| Freestyle crease angle | 135° |
+
 **Response:**
 
 - Content-Type: `image/svg+xml`
