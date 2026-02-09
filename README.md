@@ -24,7 +24,7 @@ High-performance HTTP API for rendering LDraw LEGO parts as SVG line drawings.
   </tr>
   <tr>
     <td align="center"><img src="examples/3045-slope-2x2-double.svg" width="200"><br><b>3045</b><br>Double Slope 2x2</td>
-    <td></td>
+    <td align="center"><img src="examples/6133-dragon-wing.svg" width="200"><br><b>3045</b><br>Dragon Wing</td>
     <td></td>
   </tr>
 </table>
