@@ -1,0 +1,12 @@
+*.svg
+test-*.svg
+server
+*.exe
+cache/
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
+Thumbs.db
+*.log

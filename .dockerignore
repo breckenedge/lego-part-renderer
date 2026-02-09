@@ -1,0 +1,17 @@
+# Don't copy these into Docker build context
+node_modules/
+*.md
+.git/
+.gitignore
+cache/
+output/
+temp/
+test-data/
+*.csv
+*.pdf
+ImportLDraw/
+
+# Keep these
+!README.md
+!scripts/
+!docker/
