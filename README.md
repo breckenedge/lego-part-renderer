@@ -130,8 +130,8 @@ Renders an LDraw part as an SVG line drawing.
 |--------|-------|
 | HTTP overhead | <5ms |
 | Render time | 5-10s (Blender) |
-| Memory (idle) | ~100MB |
-| Memory (per render) | ~500MB |
+| Memory (idle) | ~4MB |
+| Memory (per render) | ~170MB |
 | Concurrency | Limited by CPU (1-2 cores per render) |
 
 The bottleneck is Blender rendering, not the Go server.
@@ -175,7 +175,7 @@ services:
       resources:
         limits:
           cpus: "2"
-          memory: 768M
+          memory: 512M
     restart: unless-stopped
 ```
 
@@ -194,7 +194,7 @@ spec:
       - name: lego-renderer
         image: ghcr.io/breckenedge/lego-part-renderer:latest
         resources:
-          limits: { cpu: "2", memory: "768Mi" }
+          limits: { cpu: "2", memory: "512Mi" }
 ```
 
 ## Caching
@@ -232,7 +232,7 @@ Common causes: Blender not in PATH, LDraw library missing, or temp directory not
 
 ### Out of memory
 
-Increase the memory limit. Each concurrent render needs ~500MB:
+Increase the memory limit. Each concurrent render needs ~170MB:
 
 ```yaml
 deploy:

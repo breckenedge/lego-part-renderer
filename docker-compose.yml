@@ -14,7 +14,7 @@ services:
       resources:
         limits:
           cpus: '2'
-          memory: 768M  # Lower than Python version
+          memory: 512M
         reservations:
           cpus: '0.5'
           memory: 256M
