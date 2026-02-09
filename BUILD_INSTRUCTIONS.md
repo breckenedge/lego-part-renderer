@@ -54,16 +54,16 @@ docker-compose build
 docker-compose up -d
 
 # Check health
-curl http://localhost:8080/health
+curl http://localhost:5346/health
 
 # Render a part
-curl -X POST http://localhost:8080/render \
+curl -X POST http://localhost:5346/render \
   -H "Content-Type: application/json" \
   -d '{"partNumber":"3001","thickness":2.0}' \
   --output part-3001.svg
 
 # View metrics
-curl http://localhost:8080/metrics
+curl http://localhost:5346/metrics
 
 # Stop service
 docker-compose down
@@ -78,8 +78,8 @@ docker build -t lego-renderer .
 # Run container
 docker run -d \
   --name lego-renderer \
-  -p 8080:8080 \
-  -e PORT=8080 \
+  -p 5346:5346 \
+  -e PORT=5346 \
   lego-renderer
 
 # Check logs
@@ -143,7 +143,7 @@ After building, test each component:
 
 ### 1. Health Check
 ```bash
-curl http://localhost:8080/health
+curl http://localhost:5346/health
 
 # Expected response:
 # {
@@ -156,7 +156,7 @@ curl http://localhost:8080/health
 
 ### 2. Render a Part
 ```bash
-curl -X POST http://localhost:8080/render \
+curl -X POST http://localhost:5346/render \
   -H "Content-Type: application/json" \
   -d '{"partNumber":"3001","thickness":2.0}' \
   -o test.svg
@@ -167,7 +167,7 @@ file test.svg  # Should be: SVG Scalable Vector Graphics image
 
 ### 3. Check Metrics
 ```bash
-curl http://localhost:8080/metrics
+curl http://localhost:5346/metrics
 
 # Expected response:
 # {
@@ -182,7 +182,7 @@ curl http://localhost:8080/metrics
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `LDRAW_PATH` | `/usr/share/ldraw/ldraw` | LDraw library location |
-| `PORT` | `8080` | HTTP server port |
+| `PORT` | `5346` | HTTP server port |
 
 ## Troubleshooting
 
@@ -273,7 +273,7 @@ Pre-render common parts to populate nginx cache:
 # prewarm.sh
 PARTS="3001 3002 3003 3004 3005"
 for PART in $PARTS; do
-  curl -X POST http://localhost:8080/render \
+  curl -X POST http://localhost:5346/render \
     -H "Content-Type: application/json" \
     -d "{\"partNumber\":\"$PART\",\"thickness\":2.0}" \
     -o /dev/null -s

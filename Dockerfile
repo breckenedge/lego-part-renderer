@@ -59,14 +59,14 @@ COPY --from=builder /build/server /app/server
 
 # Set environment variables
 ENV LDRAW_PATH=/usr/share/ldraw/ldraw
-ENV PORT=8080
+ENV PORT=5346
 
-# Expose HTTP port
-EXPOSE 8080
+# Expose HTTP port (5346 = LEGO on phone keypad: L=5, E=3, G=4, O=6)
+EXPOSE 5346
 
 # Health check endpoint
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:8080/health || exit 1
+    CMD curl -f http://localhost:5346/health || exit 1
 
 # Run Go server
 CMD ["/app/server"]

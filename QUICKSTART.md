@@ -13,7 +13,7 @@ docker-compose up -d
 ./test.sh
 
 # 4. Use from your app
-export RENDER_SERVICE_URL=http://localhost:8080
+export RENDER_SERVICE_URL=http://localhost:5346
 ```
 
 ## What Changed from Original Design
@@ -69,7 +69,7 @@ export RENDER_SERVICE_URL=http://localhost:8080
 │                                                         │
 └─────────────────────────────────────────────────────────┘
            │
-           │ HTTP :8080
+           │ HTTP :5346
            │
     ┌──────▼──────┐
     │   Client    │
@@ -81,7 +81,7 @@ export RENDER_SERVICE_URL=http://localhost:8080
 
 ### POST /render
 ```bash
-curl -X POST http://localhost:8080/render \
+curl -X POST http://localhost:5346/render \
   -H "Content-Type: application/json" \
   -d '{
     "partNumber": "3001",
@@ -98,7 +98,7 @@ curl -X POST http://localhost:8080/render \
 
 ### GET /health
 ```bash
-curl http://localhost:8080/health | jq
+curl http://localhost:5346/health | jq
 ```
 
 **Response:**
@@ -113,7 +113,7 @@ curl http://localhost:8080/health | jq
 
 ### GET /metrics
 ```bash
-curl http://localhost:8080/metrics | jq
+curl http://localhost:5346/metrics | jq
 ```
 
 **Response:**
@@ -178,7 +178,7 @@ Update `src/index.js`:
 ```javascript
 // Option 1: Use HTTP client
 import { renderParts } from '../docker-service-poc/scripts/http-client.js';
-process.env.RENDER_SERVICE_URL = 'http://localhost:8080';
+process.env.RENDER_SERVICE_URL = 'http://localhost:5346';
 
 // Option 2: Keep using local renderer
 import { renderParts } from './renderer-blender.js';
@@ -255,7 +255,7 @@ kubectl logs -f deployment/lego-renderer
 ### Metrics
 ```bash
 # Expose metrics to Prometheus
-curl http://localhost:8080/metrics
+curl http://localhost:5346/metrics
 
 # Or integrate with your monitoring stack
 ```
@@ -283,7 +283,7 @@ git clone https://github.com/TobyLobster/ImportLDraw.git
 docker-compose logs render-service
 
 # Manual health check
-docker exec lego-renderer curl http://localhost:8080/health
+docker exec lego-renderer curl http://localhost:5346/health
 ```
 
 **Problem:** Rendering fails

@@ -6,7 +6,7 @@ echo "LEGO Part Renderer - Test Script"
 echo "======================================"
 echo ""
 
-SERVICE_URL="http://localhost:8080"
+SERVICE_URL="http://localhost:5346"
 
 # Check if service is running
 echo "1. Checking if service is running..."

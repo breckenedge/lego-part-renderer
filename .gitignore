@@ -1,4 +1,5 @@
 *.svg
+!examples/*.svg
 test-*.svg
 server
 *.exe

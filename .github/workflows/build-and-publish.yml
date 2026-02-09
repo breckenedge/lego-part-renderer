@@ -69,7 +69,7 @@ jobs:
           echo "Testing image: $IMAGE_TAG"
 
           # Run container
-          docker run -d --name test-renderer -p 8080:8080 $IMAGE_TAG
+          docker run -d --name test-renderer -p 5346:5346 $IMAGE_TAG
 
           # Wait for startup (40s grace period)
           echo "Waiting for service to start..."
@@ -77,10 +77,10 @@ jobs:
 
           # Health check
           echo "Running health check..."
-          curl -f http://localhost:8080/health || exit 1
+          curl -f http://localhost:5346/health || exit 1
 
           # Check health response
-          HEALTH=$(curl -s http://localhost:8080/health)
+          HEALTH=$(curl -s http://localhost:5346/health)
           echo "Health response: $HEALTH"
 
           STATUS=$(echo "$HEALTH" | jq -r .status)
@@ -94,7 +94,7 @@ jobs:
 
           # Test render (optional - takes 5-10s)
           echo "Testing render endpoint..."
-          curl -X POST http://localhost:8080/render \
+          curl -X POST http://localhost:5346/render \
             -H "Content-Type: application/json" \
             -d '{"partNumber":"3001","thickness":2.0}' \
             --output test.svg \

@@ -4,13 +4,38 @@ High-performance HTTP API for rendering LDraw LEGO parts as SVG line drawings.
 
 **Built with Go + Blender Freestyle**
 
+## Example Renders
+
+<table>
+  <tr>
+    <td align="center"><img src="examples/3001-brick-2x4.svg" width="200"><br><b>3001</b><br>Brick 2x4</td>
+    <td align="center"><img src="examples/3003-brick-2x2.svg" width="200"><br><b>3003</b><br>Brick 2x2</td>
+    <td align="center"><img src="examples/3024-plate-1x1.svg" width="200"><br><b>3024</b><br>Plate 1x1</td>
+  </tr>
+  <tr>
+    <td align="center"><img src="examples/3022-plate-2x2.svg" width="200"><br><b>3022</b><br>Plate 2x2</td>
+    <td align="center"><img src="examples/3020-plate-2x4.svg" width="200"><br><b>3020</b><br>Plate 2x4</td>
+    <td align="center"><img src="examples/3039-slope-2x2-45.svg" width="200"><br><b>3039</b><br>Slope 45° 2x2</td>
+  </tr>
+  <tr>
+    <td align="center"><img src="examples/4286-slope-1x3-33.svg" width="200"><br><b>4286</b><br>Slope 33° 1x3</td>
+    <td align="center"><img src="examples/3062b-round-brick-1x1.svg" width="200"><br><b>3062b</b><br>Round Brick 1x1</td>
+    <td align="center"><img src="examples/6141-round-plate-1x1.svg" width="200"><br><b>6141</b><br>Round Plate 1x1</td>
+  </tr>
+  <tr>
+    <td align="center"><img src="examples/3045-slope-2x2-double.svg" width="200"><br><b>3045</b><br>Double Slope 2x2</td>
+    <td></td>
+    <td></td>
+  </tr>
+</table>
+
 ## Quick Start
 
 ```bash
-docker run -d -p 8080:8080 ghcr.io/breckenedge/lego-part-renderer:latest
+docker run -d -p 5346:5346 ghcr.io/breckenedge/lego-part-renderer:latest
 
 # Render a part
-curl -X POST http://localhost:8080/render \
+curl -X POST http://localhost:5346/render \
   -H "Content-Type: application/json" \
   -d '{"partNumber":"3001","thickness":2.0}' \
   --output part.svg
@@ -83,7 +108,7 @@ Go HTTP Server ──▶ Blender subprocess ──▶ SVG output
 ```bash
 docker run -d \
   --name lego-renderer \
-  -p 8080:8080 \
+  -p 5346:5346 \
   --restart unless-stopped \
   ghcr.io/breckenedge/lego-part-renderer:latest
 ```
@@ -95,7 +120,7 @@ services:
   lego-renderer:
     image: ghcr.io/breckenedge/lego-part-renderer:latest
     ports:
-      - "8080:8080"
+      - "5346:5346"
     restart: unless-stopped
 ```
 
@@ -121,7 +146,7 @@ spec:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `PORT` | `8080` | HTTP port |
+| `PORT` | `5346` | HTTP port (5346 = LEGO on phone keypad) |
 | `LDRAW_PATH` | `/usr/share/ldraw/ldraw` | LDraw library path |
 
 ## Caching
