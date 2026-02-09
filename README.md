@@ -134,7 +134,7 @@ Renders an LDraw part as an SVG line drawing.
 | Memory (per render) | ~170MB |
 | Concurrency | Limited by CPU (1-2 cores per render) |
 
-The bottleneck is Blender rendering, not the Go server.
+The bottleneck is Blender rendering, not the Go server. **No GPU required** - the renderer uses Cycles at 1 sample purely to trigger Freestyle edge detection, which is CPU-bound geometry processing. A GPU would add overhead for no gain.
 
 ## Building
 
