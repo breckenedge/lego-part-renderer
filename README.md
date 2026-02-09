@@ -119,11 +119,11 @@ The following values are currently hardcoded and not yet configurable via the AP
 ┌──────────────────────────────────────────────────┐
 │  Docker Container                                │
 │                                                  │
-│  ┌──────────────┐      ┌─────────────────┐      │
-│  │   Go HTTP    │─────>│    Blender      │      │
-│  │   Server     │      │  (subprocess)   │      │
-│  │   (8MB)      │      │  + Freestyle    │      │
-│  └──────────────┘      └─────────────────┘      │
+│  ┌──────────────┐      ┌─────────────────┐       │
+│  │   Go HTTP    │─────>│    Blender      │       │
+│  │   Server     │      │  (subprocess)   │       │
+│  │   (8MB)      │      │  + Freestyle    │       │
+│  └──────────────┘      └─────────────────┘       │
 │                                                  │
 │  LDraw Library: 12,000+ official part files      │
 │                                                  │
