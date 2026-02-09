@@ -41,18 +41,13 @@ curl -X POST http://localhost:5346/render \
   --output part.svg
 ```
 
-## Features
-
-- ✅ **Fast Go server** - <5ms HTTP overhead, ~20MB memory
-- ✅ **Professional rendering** - Blender Freestyle SVG output
-- ✅ **12,000+ LEGO parts** - Complete LDraw library included
-- ✅ **Zero config** - Auto-downloads dependencies during build
-- ✅ **Production ready** - Health checks, metrics, Docker/K8s support
-- ✅ **Stateless** - Easy to scale horizontally
-
 ## API
 
 ### POST /render
+
+Renders an LDraw part as an SVG line drawing.
+
+**Request:**
 
 ```json
 {
@@ -61,7 +56,24 @@ curl -X POST http://localhost:5346/render \
 }
 ```
 
-Returns SVG image with `Cache-Control: public, max-age=31536000, immutable`
+| Field | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| `partNumber` | string | yes | | LDraw part number (e.g. `"3001"`, `"3062b"`) |
+| `thickness` | float | no | `2.0` | Line thickness in pixels (0.5 - 20.0) |
+
+**Response:**
+
+- Content-Type: `image/svg+xml`
+- `Cache-Control: public, max-age=31536000, immutable`
+- `X-Render-Duration: 6.23s`
+
+**Errors:**
+
+| Status | Cause |
+|--------|-------|
+| 400 | Missing `partNumber`, invalid JSON, or `thickness` out of range |
+| 404 | Part not found in LDraw library |
+| 500 | Blender rendering failed or timed out (120s limit) |
 
 ### GET /health
 
@@ -69,7 +81,8 @@ Returns SVG image with `Cache-Control: public, max-age=31536000, immutable`
 {
   "status": "healthy",
   "blender_available": true,
-  "ldraw_available": true
+  "ldraw_available": true,
+  "temp_dir_writable": true
 }
 ```
 
@@ -83,23 +96,60 @@ Returns SVG image with `Cache-Control: public, max-age=31536000, immutable`
 }
 ```
 
+## Configuration
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `PORT` | `5346` | HTTP port (5346 = LEGO on phone keypad) |
+| `LDRAW_PATH` | `/usr/share/ldraw/ldraw` | LDraw library path |
+
 ## Architecture
 
 ```
-Go HTTP Server ──▶ Blender subprocess ──▶ SVG output
-  (8MB binary)      (Freestyle renderer)     (~50KB)
+┌──────────────────────────────────────────────────┐
+│  Docker Container                                │
+│                                                  │
+│  ┌──────────────┐      ┌─────────────────┐      │
+│  │   Go HTTP    │─────>│    Blender      │      │
+│  │   Server     │      │  (subprocess)   │      │
+│  │   (8MB)      │      │  + Freestyle    │      │
+│  └──────────────┘      └─────────────────┘      │
+│                                                  │
+│  LDraw Library: 12,000+ official part files      │
+│                                                  │
+└──────────────────────────────────────────────────┘
 ```
 
-- **Go**: Handles HTTP, spawns Blender, returns SVG
-- **Blender**: Imports LDraw part, renders with Freestyle
-- **LDraw**: 12,000+ official LEGO part definitions
+- **Go**: Handles HTTP, validates input, spawns Blender, returns SVG
+- **Blender**: Imports LDraw part via ImportLDraw addon, renders with Freestyle
+- **LDraw**: 12,000+ official LEGO part geometry definitions
 
 ## Performance
 
-- HTTP overhead: <5ms
-- Render time: 5-10s (Blender)
-- Memory: ~100MB idle, ~500MB per render
-- Concurrent: Limited by CPU (1-2 cores per render)
+| Metric | Value |
+|--------|-------|
+| HTTP overhead | <5ms |
+| Render time | 5-10s (Blender) |
+| Memory (idle) | ~100MB |
+| Memory (per render) | ~500MB |
+| Concurrency | Limited by CPU (1-2 cores per render) |
+
+The bottleneck is Blender rendering, not the Go server.
+
+## Building
+
+```bash
+git clone https://github.com/breckenedge/lego-part-renderer.git
+cd lego-part-renderer
+docker build -t lego-renderer .
+```
+
+The multi-stage Docker build downloads everything automatically:
+
+1. **Stage 1** (golang:1.22-alpine): Downloads LDraw library (~40MB compressed, ~700MB extracted), clones ImportLDraw addon, builds Go server as a static binary
+2. **Stage 2** (ubuntu:22.04): Installs Blender, copies LDraw library and Go binary from stage 1
+
+No manual dependency setup required.
 
 ## Deployment
 
@@ -121,6 +171,11 @@ services:
     image: ghcr.io/breckenedge/lego-part-renderer:latest
     ports:
       - "5346:5346"
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 768M
     restart: unless-stopped
 ```
 
@@ -142,31 +197,49 @@ spec:
           limits: { cpu: "2", memory: "768Mi" }
 ```
 
-## Configuration
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `PORT` | `5346` | HTTP port (5346 = LEGO on phone keypad) |
-| `LDRAW_PATH` | `/usr/share/ldraw/ldraw` | LDraw library path |
-
 ## Caching
 
-Service is stateless. Cache at:
-- **Nginx** (recommended) - HTTP proxy cache
-- **CDN** - CloudFlare, Fastly, etc.
+The service is stateless and returns `Cache-Control: public, max-age=31536000, immutable` on all renders. Cache at any layer:
+
+- **Reverse proxy** (Nginx) - HTTP response caching
+- **CDN** (CloudFlare, Fastly, etc.) - Edge caching
 - **Client** - Application-level cache
 
-## Building
+## Troubleshooting
 
-```bash
-git clone https://github.com/breckenedge/lego-part-renderer.git
-cd lego-part-renderer
-docker build -t lego-renderer .
+### Build fails downloading LDraw library
+
+`wget` times out or fails. Check internet connectivity or use a mirror:
+
+```dockerfile
+# In Dockerfile, replace:
+wget https://library.ldraw.org/library/updates/complete.zip
+# With mirror:
+wget https://www.ldraw.org/library/updates/complete.zip
 ```
 
-Auto-downloads during build:
-- ImportLDraw addon (GitHub)
-- LDraw library (ldraw.org, ~700MB)
+### Blender addon not found
+
+Rendering fails with "No module named 'ImportLDraw'". Check that ImportLDraw is in `/root/.config/blender/3.0/scripts/addons/ImportLDraw/`. The render script enables addons at runtime via `addon_utils.enable()`.
+
+### Container unhealthy
+
+```bash
+docker logs lego-renderer
+```
+
+Common causes: Blender not in PATH, LDraw library missing, or temp directory not writable.
+
+### Out of memory
+
+Increase the memory limit. Each concurrent render needs ~500MB:
+
+```yaml
+deploy:
+  resources:
+    limits:
+      memory: 2G
+```
 
 ## License
 
@@ -174,6 +247,6 @@ MIT
 
 ## Credits
 
-- LDraw: https://www.ldraw.org/
-- ImportLDraw: https://github.com/TobyLobster/ImportLDraw  
-- Blender: https://www.blender.org/
+- [LDraw](https://www.ldraw.org/) - Part library
+- [ImportLDraw](https://github.com/TobyLobster/ImportLDraw) - Blender addon
+- [Blender](https://www.blender.org/) - 3D rendering
