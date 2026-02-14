@@ -2,13 +2,21 @@
 Render an LDraw part as an SVG line drawing using Blender Freestyle.
 
 Usage:
-    blender --background --python render_part.py -- <input.dat> <output.svg> [ldraw_path] [thickness]
+    blender --background --python render_part.py -- <input.dat> <output.svg> [ldraw_path] [thickness] \
+        [camera_lat] [camera_lon] [res_x] [res_y] [padding] [crease_angle] [edge_types]
 
 Arguments:
-    input.dat    Path to the LDraw .dat part file
-    output.svg   Path for the output SVG file
-    ldraw_path   Path to LDraw library root (default: /usr/share/ldraw/ldraw)
-    thickness    Line thickness in pixels (default: 2.0)
+    input.dat      Path to the LDraw .dat part file
+    output.svg     Path for the output SVG file
+    ldraw_path     Path to LDraw library root (default: /usr/share/ldraw/ldraw)
+    thickness      Line thickness in pixels (default: 2.0)
+    camera_lat     Camera latitude in degrees (default: 30)
+    camera_lon     Camera longitude in degrees (default: 45)
+    res_x          Render resolution width (default: 1024)
+    res_y          Render resolution height (default: 1024)
+    padding        Camera framing padding factor (default: 0.03)
+    crease_angle   Freestyle crease angle in degrees (default: 135)
+    edge_types     Comma-separated edge types (default: silhouette,crease,border)
 """
 
 import bpy
@@ -16,13 +24,14 @@ import addon_utils
 import sys
 import os
 import mathutils
+import xml.etree.ElementTree as ET
 from math import radians, atan, sqrt
 
 
 def parse_args():
     argv = sys.argv
     if "--" not in argv:
-        print("Usage: blender --background --python render_part.py -- <input.dat> <output.svg> [ldraw_path] [thickness]")
+        print("Usage: blender --background --python render_part.py -- <input.dat> <output.svg> [ldraw_path] [thickness] ...")
         sys.exit(1)
 
     argv = argv[argv.index("--") + 1:]
@@ -35,6 +44,13 @@ def parse_args():
         "output_svg": argv[1],
         "ldraw_path": argv[2] if len(argv) > 2 else "/usr/share/ldraw/ldraw",
         "thickness": float(argv[3]) if len(argv) > 3 else 2.0,
+        "camera_lat": float(argv[4]) if len(argv) > 4 else 30.0,
+        "camera_lon": float(argv[5]) if len(argv) > 5 else 45.0,
+        "resolution_x": int(argv[6]) if len(argv) > 6 else 1024,
+        "resolution_y": int(argv[7]) if len(argv) > 7 else 1024,
+        "padding": float(argv[8]) if len(argv) > 8 else 0.03,
+        "crease_angle": float(argv[9]) if len(argv) > 9 else 135.0,
+        "edge_types": argv[10] if len(argv) > 10 else "silhouette,crease,border",
     }
 
 
@@ -75,8 +91,8 @@ def import_ldraw_part(filepath, ldraw_path):
     )
 
 
-def setup_camera(scene, padding=0.03):
-    """Create an orthographic camera at an isometric angle, framed to fit all objects."""
+def setup_camera(scene, padding=0.03, camera_lat=30.0, camera_lon=45.0):
+    """Create an orthographic camera at a given angle, framed to fit all objects."""
     cam_data = bpy.data.cameras.new("IsoCam")
     cam_data.type = 'ORTHO'
     cam_data.clip_start = 0.0001  # Tiny clip_start for small LDraw parts
@@ -86,10 +102,8 @@ def setup_camera(scene, padding=0.03):
     scene.collection.objects.link(cam_obj)
     scene.camera = cam_obj
 
-    # Isometric rotation: 30 deg latitude, 45 deg longitude
-    # (matching the existing three.js renderer angles)
-    lat = radians(30)
-    lon = radians(45)
+    lat = radians(camera_lat)
+    lon = radians(camera_lon)
 
     # Gather bounding box of all mesh objects
     all_corners = []
@@ -163,28 +177,29 @@ def setup_camera(scene, padding=0.03):
     cam_data.shift_y = -center_vy / scale
 
 
-def setup_freestyle(scene, thickness):
+def setup_freestyle(scene, thickness, crease_angle=135.0, edge_types="silhouette,crease,border"):
     """Configure Freestyle for clean line drawing output."""
     scene.render.use_freestyle = True
 
     view_layer = bpy.context.view_layer
     fs_settings = view_layer.freestyle_settings
     fs_settings.mode = 'EDITOR'
-    fs_settings.crease_angle = radians(135)
+    fs_settings.crease_angle = radians(crease_angle)
 
     # Clear existing linesets
     while len(fs_settings.linesets) > 0:
         fs_settings.linesets.remove(fs_settings.linesets[0])
 
-    # Create lineset with edge types for clean technical drawing
+    # Create lineset with edge types from configuration
+    enabled = set(edge_types.split(",")) if edge_types != "none" else set()
     lineset = fs_settings.linesets.new("Edges")
-    lineset.select_silhouette = True
-    lineset.select_crease = True
-    lineset.select_border = True
-    lineset.select_contour = False
-    lineset.select_external_contour = False
-    lineset.select_edge_mark = False
-    lineset.select_material_boundary = False
+    lineset.select_silhouette = "silhouette" in enabled
+    lineset.select_crease = "crease" in enabled
+    lineset.select_border = "border" in enabled
+    lineset.select_contour = "contour" in enabled
+    lineset.select_external_contour = "external_contour" in enabled
+    lineset.select_edge_mark = "edge_mark" in enabled
+    lineset.select_material_boundary = "material_boundary" in enabled
     lineset.visibility = 'VISIBLE'
     lineset.edge_type_combination = 'OR'
     lineset.edge_type_negation = 'INCLUSIVE'
@@ -209,6 +224,21 @@ def setup_svg_export(scene, lineset):
     ls = lineset.linestyle
     ls.use_export_strokes = True
     ls.use_export_fills = False
+
+
+def add_svg_background(svg_path):
+    """Insert a white background rect as the first child of the SVG root."""
+    SVG_NS = "http://www.w3.org/2000/svg"
+    ET.register_namespace("", SVG_NS)
+    tree = ET.parse(svg_path)
+    root = tree.getroot()
+    bg = ET.Element("rect")
+    bg.set("width", "100%")
+    bg.set("height", "100%")
+    bg.set("fill", "white")
+    root.insert(0, bg)
+    tree.write(svg_path, xml_declaration=True, encoding="unicode")
+    print(f"Added white background to: {svg_path}")
 
 
 def main():
@@ -261,15 +291,20 @@ def main():
     scene.render.engine = 'CYCLES'
     scene.cycles.device = 'CPU'
     scene.cycles.samples = 1  # Minimal samples since we only need Freestyle lines
-    scene.render.resolution_x = 1024
-    scene.render.resolution_y = 1024
+    scene.render.resolution_x = args["resolution_x"]
+    scene.render.resolution_y = args["resolution_y"]
     scene.render.film_transparent = True
 
     # Setup camera
-    setup_camera(scene)
+    setup_camera(scene,
+                 padding=args["padding"],
+                 camera_lat=args["camera_lat"],
+                 camera_lon=args["camera_lon"])
 
     # Setup Freestyle
-    setup_freestyle(scene, args["thickness"])
+    setup_freestyle(scene, args["thickness"],
+                    crease_angle=args["crease_angle"],
+                    edge_types=args["edge_types"])
 
     # Setup SVG export
     fs_settings = bpy.context.view_layer.freestyle_settings
@@ -300,6 +335,9 @@ def main():
         for f in os.listdir(output_dir):
             print(f"  {f}")
         sys.exit(1)
+
+    # Post-process SVG: add white background for dark mode compatibility
+    add_svg_background(output_svg)
 
 
 if __name__ == "__main__":
