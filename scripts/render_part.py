@@ -2,19 +2,21 @@
 Render an LDraw part as an SVG line drawing using Blender Freestyle.
 
 Usage:
-    blender --background --python render_part.py -- <input.dat> <output.svg> [ldraw_path] [thickness]
+    blender --background --python render_part.py -- <input.dat> <output.svg> [ldraw_path] [thickness] [fill_color]
 
 Arguments:
     input.dat    Path to the LDraw .dat part file
     output.svg   Path for the output SVG file
     ldraw_path   Path to LDraw library root (default: /usr/share/ldraw/ldraw)
     thickness    Line thickness in pixels (default: 2.0)
+    fill_color   Fill color for object shapes (default: currentColor)
 """
 
 import bpy
 import addon_utils
 import sys
 import os
+import re
 import mathutils
 from math import radians, atan, sqrt
 
@@ -22,7 +24,7 @@ from math import radians, atan, sqrt
 def parse_args():
     argv = sys.argv
     if "--" not in argv:
-        print("Usage: blender --background --python render_part.py -- <input.dat> <output.svg> [ldraw_path] [thickness]")
+        print("Usage: blender --background --python render_part.py -- <input.dat> <output.svg> [ldraw_path] [thickness] [fill_color]")
         sys.exit(1)
 
     argv = argv[argv.index("--") + 1:]
@@ -35,6 +37,7 @@ def parse_args():
         "output_svg": argv[1],
         "ldraw_path": argv[2] if len(argv) > 2 else "/usr/share/ldraw/ldraw",
         "thickness": float(argv[3]) if len(argv) > 3 else 2.0,
+        "fill_color": argv[4] if len(argv) > 4 else "currentColor",
     }
 
 
@@ -201,14 +204,29 @@ def setup_svg_export(scene, lineset):
     """Configure the Freestyle SVG Exporter addon."""
     scene.svg_export.use_svg_export = True
     scene.svg_export.mode = 'FRAME'
-    scene.svg_export.object_fill = False
+    scene.svg_export.object_fill = True
     scene.svg_export.split_at_invisible = False
     scene.svg_export.line_join_type = 'ROUND'
 
     # Per-linestyle export settings
     ls = lineset.linestyle
     ls.use_export_strokes = True
-    ls.use_export_fills = False
+    ls.use_export_fills = True
+
+
+def postprocess_svg(svg_path, fill_color):
+    """Replace Blender's hardcoded colors with configurable values."""
+    with open(svg_path, "r") as f:
+        content = f.read()
+
+    # Replace Blender's white fill (from white material) with the requested fill color
+    content = re.sub(r'fill="rgb\(255,\s*255,\s*255\)"', f'fill="{fill_color}"', content)
+
+    # Replace black strokes with currentColor so SVGs adapt to CSS context
+    content = re.sub(r'stroke="rgb\(0,\s*0,\s*0\)"', 'stroke="currentColor"', content)
+
+    with open(svg_path, "w") as f:
+        f.write(content)
 
 
 def main():
@@ -293,6 +311,7 @@ def main():
     if os.path.exists(expected_svg):
         if expected_svg != output_svg:
             os.rename(expected_svg, output_svg)
+        postprocess_svg(output_svg, args["fill_color"])
         print(f"SVG written to: {output_svg}")
     else:
         print(f"Error: expected SVG not found at {expected_svg}")

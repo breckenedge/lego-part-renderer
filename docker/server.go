@@ -37,6 +37,7 @@ var metrics = &Metrics{}
 type RenderRequest struct {
 	PartNumber string  `json:"partNumber"`
 	Thickness  float64 `json:"thickness"`
+	FillColor  string  `json:"fillColor"`
 }
 
 type HealthResponse struct {
@@ -132,6 +133,10 @@ func handleRender(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if req.FillColor == "" {
+		req.FillColor = "currentColor"
+	}
+
 	start := time.Now()
 
 	// Find part file
@@ -175,6 +180,7 @@ func handleRender(w http.ResponseWriter, r *http.Request) {
 		outputPath,
 		ldrawPath,
 		fmt.Sprintf("%.1f", req.Thickness),
+		req.FillColor,
 	)
 
 	var stderr bytes.Buffer

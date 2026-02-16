@@ -15,3 +15,7 @@ git push origin v1.0.0
 ```
 
 CI handles the rest: Docker build, publish to ghcr.io, and GitHub Release creation.
+
+## Environment
+
+- Docker Desktop is available via WSL2 but may need to be started manually before use
