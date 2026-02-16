@@ -34,19 +34,24 @@ func TestRenderGoldenFiles(t *testing.T) {
 	srv := httptest.NewServer(mux)
 	defer srv.Close()
 
-	thicknesses := map[string]float64{
-		"3001":  3.0,
-		"3003":  2.5,
-		"3020":  1.5,
-		"3022":  1.0,
-		"3024":  0.5,
-		"3039":  2.0,
-		"3045":  3.5,
-		"3062b": 1.5,
-		"4286":  2.5,
-		"4740":  1.0,
-		"6133":  4.0,
-		"6141":  0.5,
+	type partParams struct {
+		thickness float64
+		fillColor string
+	}
+
+	params := map[string]partParams{
+		"3001":  {3.0, "white"},
+		"3003":  {2.5, "#e0e0e0"},
+		"3020":  {1.5, "red"},
+		"3022":  {1.0, "#4a90d9"},
+		"3024":  {0.5, "currentColor"},
+		"3039":  {2.0, "white"},
+		"3045":  {3.5, "#2ecc71"},
+		"3062b": {1.5, "orange"},
+		"4286":  {2.5, "white"},
+		"4740":  {1.0, "#9b59b6"},
+		"6133":  {4.0, "#e74c3c"},
+		"6141":  {0.5, "yellow"},
 	}
 
 	for _, entry := range entries {
@@ -56,9 +61,12 @@ func TestRenderGoldenFiles(t *testing.T) {
 		}
 
 		partNumber := strings.SplitN(strings.TrimSuffix(name, ".svg"), "-", 2)[0]
-		thickness := thicknesses[partNumber]
-		if thickness == 0 {
-			thickness = 2.0
+		p := params[partNumber]
+		if p.thickness == 0 {
+			p.thickness = 2.0
+		}
+		if p.fillColor == "" {
+			p.fillColor = "white"
 		}
 
 		t.Run(partNumber, func(t *testing.T) {
@@ -67,7 +75,7 @@ func TestRenderGoldenFiles(t *testing.T) {
 				t.Fatalf("reading golden file %s: %v", name, err)
 			}
 
-			body, _ := json.Marshal(RenderRequest{PartNumber: partNumber, Thickness: thickness})
+			body, _ := json.Marshal(RenderRequest{PartNumber: partNumber, Thickness: p.thickness, FillColor: p.fillColor})
 			resp, err := http.Post(srv.URL+"/render", "application/json", bytes.NewReader(body))
 			if err != nil {
 				t.Fatalf("POST /render: %v", err)

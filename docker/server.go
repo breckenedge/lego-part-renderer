@@ -134,7 +134,7 @@ func handleRender(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if req.FillColor == "" {
-		req.FillColor = "currentColor"
+		req.FillColor = "white"
 	}
 
 	start := time.Now()
