@@ -34,6 +34,21 @@ func TestRenderGoldenFiles(t *testing.T) {
 	srv := httptest.NewServer(mux)
 	defer srv.Close()
 
+	thicknesses := map[string]float64{
+		"3001":  3.0,
+		"3003":  2.5,
+		"3020":  1.5,
+		"3022":  1.0,
+		"3024":  0.5,
+		"3039":  2.0,
+		"3045":  3.5,
+		"3062b": 1.5,
+		"4286":  2.5,
+		"4740":  1.0,
+		"6133":  4.0,
+		"6141":  0.5,
+	}
+
 	for _, entry := range entries {
 		name := entry.Name()
 		if !strings.HasSuffix(name, ".svg") {
@@ -41,6 +56,10 @@ func TestRenderGoldenFiles(t *testing.T) {
 		}
 
 		partNumber := strings.SplitN(strings.TrimSuffix(name, ".svg"), "-", 2)[0]
+		thickness := thicknesses[partNumber]
+		if thickness == 0 {
+			thickness = 2.0
+		}
 
 		t.Run(partNumber, func(t *testing.T) {
 			golden, err := os.ReadFile(filepath.Join(examplesDir, name))
@@ -48,7 +67,7 @@ func TestRenderGoldenFiles(t *testing.T) {
 				t.Fatalf("reading golden file %s: %v", name, err)
 			}
 
-			body, _ := json.Marshal(RenderRequest{PartNumber: partNumber})
+			body, _ := json.Marshal(RenderRequest{PartNumber: partNumber, Thickness: thickness})
 			resp, err := http.Post(srv.URL+"/render", "application/json", bytes.NewReader(body))
 			if err != nil {
 				t.Fatalf("POST /render: %v", err)
