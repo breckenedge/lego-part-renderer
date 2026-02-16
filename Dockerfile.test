@@ -1,0 +1,14 @@
+FROM golang:1.22 AS gobin
+
+FROM lego-part-renderer-worktree-render-service
+
+COPY --from=gobin /usr/local/go /usr/local/go
+ENV PATH="/usr/local/go/bin:${PATH}"
+
+WORKDIR /src
+COPY go.mod .
+COPY docker/ docker/
+COPY examples/ examples/
+
+WORKDIR /src/docker
+RUN go test -v -count=1 .
