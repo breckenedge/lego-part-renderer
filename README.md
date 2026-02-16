@@ -267,6 +267,7 @@ MIT
 
 ## Credits
 
+- [Claude](https://claude.ai/) - Wrote all the code
 - [LDraw](https://www.ldraw.org/) - Part library
 - [ImportLDraw](https://github.com/TobyLobster/ImportLDraw) - Blender addon
 - [Blender](https://www.blender.org/) - 3D rendering
