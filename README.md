@@ -161,6 +161,16 @@ The multi-stage Docker build downloads everything automatically:
 
 No manual dependency setup required.
 
+## Testing
+
+Golden file tests render every part in `examples/` and compare the output byte-for-byte against the checked-in SVGs. Since the tests require Blender and the LDraw library, they run inside Docker:
+
+```bash
+docker build -f Dockerfile.test -t lego-test .
+```
+
+Tests are skipped automatically if Blender isn't available, so `go test ./docker/` is safe to run locally even without Blender installed.
+
 ## Deployment
 
 ### Docker
