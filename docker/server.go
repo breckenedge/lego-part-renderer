@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -35,9 +36,26 @@ var metrics = &Metrics{}
 
 // Request/Response types
 type RenderRequest struct {
-	PartNumber string  `json:"partNumber"`
-	Thickness  float64 `json:"thickness"`
-	FillColor  string  `json:"fillColor"`
+	PartNumber      string     `json:"partNumber"`
+	Thickness       float64    `json:"thickness"`
+	FillColor       string     `json:"fillColor"`
+	CameraLatitude  *float64   `json:"cameraLatitude"`
+	CameraLongitude *float64   `json:"cameraLongitude"`
+	ResolutionX     *int       `json:"resolutionX"`
+	ResolutionY     *int       `json:"resolutionY"`
+	Padding         *float64   `json:"padding"`
+	CreaseAngle     *float64   `json:"creaseAngle"`
+	EdgeTypes       *EdgeTypes `json:"edgeTypes"`
+}
+
+type EdgeTypes struct {
+	Silhouette       *bool `json:"silhouette"`
+	Crease           *bool `json:"crease"`
+	Border           *bool `json:"border"`
+	Contour          *bool `json:"contour"`
+	ExternalContour  *bool `json:"externalContour"`
+	EdgeMark         *bool `json:"edgeMark"`
+	MaterialBoundary *bool `json:"materialBoundary"`
 }
 
 type HealthResponse struct {
@@ -137,6 +155,62 @@ func handleRender(w http.ResponseWriter, r *http.Request) {
 		req.FillColor = "white"
 	}
 
+	// Apply defaults for optional fields
+	cameraLat := 30.0
+	if req.CameraLatitude != nil {
+		cameraLat = *req.CameraLatitude
+	}
+	cameraLon := 45.0
+	if req.CameraLongitude != nil {
+		cameraLon = *req.CameraLongitude
+	}
+	resX := 1024
+	if req.ResolutionX != nil {
+		resX = *req.ResolutionX
+	}
+	resY := 1024
+	if req.ResolutionY != nil {
+		resY = *req.ResolutionY
+	}
+	padding := 0.03
+	if req.Padding != nil {
+		padding = *req.Padding
+	}
+	creaseAngle := 135.0
+	if req.CreaseAngle != nil {
+		creaseAngle = *req.CreaseAngle
+	}
+
+	// Validate ranges
+	if cameraLat < -90 || cameraLat > 90 {
+		sendError(w, http.StatusBadRequest, "cameraLatitude must be between -90 and 90", "")
+		return
+	}
+	if cameraLon < -360 || cameraLon > 360 {
+		sendError(w, http.StatusBadRequest, "cameraLongitude must be between -360 and 360", "")
+		return
+	}
+	if resX < 64 || resX > 4096 {
+		sendError(w, http.StatusBadRequest, "resolutionX must be between 64 and 4096", "")
+		return
+	}
+	if resY < 64 || resY > 4096 {
+		sendError(w, http.StatusBadRequest, "resolutionY must be between 64 and 4096", "")
+		return
+	}
+	if padding < 0 || padding > 0.5 {
+		sendError(w, http.StatusBadRequest, "padding must be between 0 and 0.5", "")
+		return
+	}
+	if creaseAngle < 0 || creaseAngle > 180 {
+		sendError(w, http.StatusBadRequest, "creaseAngle must be between 0 and 180", "")
+		return
+	}
+
+	// Build edge types string
+	edgeTypes := buildEdgeTypes(req.EdgeTypes)
+
+
 	start := time.Now()
 
 	// Find part file
@@ -165,7 +239,8 @@ func handleRender(w http.ResponseWriter, r *http.Request) {
 	defer os.Remove(outputPath)
 
 	// Render with Blender
-	log.Printf("Rendering %s (thickness=%.1f)", req.PartNumber, req.Thickness)
+	log.Printf("Rendering %s (thickness=%.1f, camera=%.1f/%.1f, res=%dx%d, padding=%.3f, crease=%.1f, edges=%s)",
+		req.PartNumber, req.Thickness, cameraLat, cameraLon, resX, resY, padding, creaseAngle, edgeTypes)
 	renderStart := time.Now()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
@@ -181,6 +256,13 @@ func handleRender(w http.ResponseWriter, r *http.Request) {
 		ldrawPath,
 		fmt.Sprintf("%.1f", req.Thickness),
 		req.FillColor,
+		fmt.Sprintf("%f", cameraLat),
+		fmt.Sprintf("%f", cameraLon),
+		strconv.Itoa(resX),
+		strconv.Itoa(resY),
+		fmt.Sprintf("%f", padding),
+		fmt.Sprintf("%f", creaseAngle),
+		edgeTypes,
 	)
 
 	var stderr bytes.Buffer
@@ -302,6 +384,70 @@ func handleMetrics(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
+}
+
+// Build comma-separated edge types string from request
+func buildEdgeTypes(et *EdgeTypes) string {
+	// Defaults: silhouette, crease, border enabled; rest disabled
+	silhouette := true
+	crease := true
+	border := true
+	contour := false
+	externalContour := false
+	edgeMark := false
+	materialBoundary := false
+
+	if et != nil {
+		if et.Silhouette != nil {
+			silhouette = *et.Silhouette
+		}
+		if et.Crease != nil {
+			crease = *et.Crease
+		}
+		if et.Border != nil {
+			border = *et.Border
+		}
+		if et.Contour != nil {
+			contour = *et.Contour
+		}
+		if et.ExternalContour != nil {
+			externalContour = *et.ExternalContour
+		}
+		if et.EdgeMark != nil {
+			edgeMark = *et.EdgeMark
+		}
+		if et.MaterialBoundary != nil {
+			materialBoundary = *et.MaterialBoundary
+		}
+	}
+
+	var types []string
+	if silhouette {
+		types = append(types, "silhouette")
+	}
+	if crease {
+		types = append(types, "crease")
+	}
+	if border {
+		types = append(types, "border")
+	}
+	if contour {
+		types = append(types, "contour")
+	}
+	if externalContour {
+		types = append(types, "external_contour")
+	}
+	if edgeMark {
+		types = append(types, "edge_mark")
+	}
+	if materialBoundary {
+		types = append(types, "material_boundary")
+	}
+
+	if len(types) == 0 {
+		return "none"
+	}
+	return strings.Join(types, ",")
 }
 
 // Find part file in LDraw library
