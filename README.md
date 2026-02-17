@@ -52,7 +52,8 @@ Renders an LDraw part as an SVG line drawing.
 ```json
 {
   "partNumber": "3001",
-  "thickness": 2.0
+  "thickness": 2.0,
+  "fillColor": "currentColor"
 }
 ```
 
@@ -60,6 +61,7 @@ Renders an LDraw part as an SVG line drawing.
 |-------|------|----------|---------|-------------|
 | `partNumber` | string | yes | | LDraw part number (e.g. `"3001"`, `"3062b"`) |
 | `thickness` | float | no | `2.0` | Line thickness in pixels (0.5 - 20.0) |
+| `fillColor` | string | no | `white` | Fill color for object shapes (any CSS color value) |
 
 The following values are currently hardcoded and not yet configurable via the API ([#2](https://github.com/breckenedge/lego-part-renderer/issues/2)):
 
@@ -267,6 +269,7 @@ MIT
 
 ## Credits
 
+- [Claude](https://claude.ai/) - Wrote all the code
 - [LDraw](https://www.ldraw.org/) - Part library
 - [ImportLDraw](https://github.com/TobyLobster/ImportLDraw) - Blender addon
 - [Blender](https://www.blender.org/) - 3D rendering

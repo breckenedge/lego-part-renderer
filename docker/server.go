@@ -38,6 +38,7 @@ var metrics = &Metrics{}
 type RenderRequest struct {
 	PartNumber      string     `json:"partNumber"`
 	Thickness       float64    `json:"thickness"`
+	FillColor       string     `json:"fillColor"`
 	CameraLatitude  *float64   `json:"cameraLatitude"`
 	CameraLongitude *float64   `json:"cameraLongitude"`
 	ResolutionX     *int       `json:"resolutionX"`
@@ -150,6 +151,10 @@ func handleRender(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if req.FillColor == "" {
+		req.FillColor = "white"
+	}
+
 	// Apply defaults for optional fields
 	cameraLat := 30.0
 	if req.CameraLatitude != nil {
@@ -205,6 +210,7 @@ func handleRender(w http.ResponseWriter, r *http.Request) {
 	// Build edge types string
 	edgeTypes := buildEdgeTypes(req.EdgeTypes)
 
+
 	start := time.Now()
 
 	// Find part file
@@ -249,6 +255,7 @@ func handleRender(w http.ResponseWriter, r *http.Request) {
 		outputPath,
 		ldrawPath,
 		fmt.Sprintf("%.1f", req.Thickness),
+		req.FillColor,
 		fmt.Sprintf("%f", cameraLat),
 		fmt.Sprintf("%f", cameraLon),
 		strconv.Itoa(resX),
