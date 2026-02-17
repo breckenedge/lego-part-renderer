@@ -11,4 +11,4 @@ COPY docker/ docker/
 COPY examples/ examples/
 
 WORKDIR /src/docker
-RUN go test -v -count=1 .
+RUN go test -v -count=1 -failfast .

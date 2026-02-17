@@ -1,7 +1,7 @@
-<?xml version='1.0' encoding='ascii'?>
+<?xml version='1.0' encoding='utf-8'?>
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" version="1.1" width="1024" height="1024">
-    <g id="ViewLayer_Edges" inkscape:groupmode="lineset" inkscape:label="ViewLayer_Edges">
-        <g xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" inkscape:groupmode="layer" inkscape:label="fills" id="fills">
+    <rect width="100%" height="100%" fill="white" /><g id="ViewLayer_Edges" inkscape:groupmode="lineset" inkscape:label="ViewLayer_Edges">
+        <g inkscape:groupmode="layer" inkscape:label="fills" id="fills">
             <path fill_rule="evenodd" stroke="none" fill-opacity="1.0" fill="yellow" d=" M 784.250, 692.518 784.250, 641.825 826.420, 610.274 852.313, 545.156 852.313, 456.740 826.420, 391.622 752.640, 336.420 712.867, 323.130 700.652, 292.412 656.384, 259.290 590.141, 237.156 512.000, 229.389 433.859, 237.156 367.616, 259.290 323.348, 292.412 311.133, 323.130 271.360, 336.420 197.580, 391.622 171.687, 456.740 171.687, 545.156 197.580, 610.274 239.749, 641.825 239.749, 692.518 260.464, 744.611 319.488, 788.774 407.812, 818.286 512.000, 828.643 616.188, 818.286 704.512, 788.774 763.536, 744.612 784.250, 692.518  z M 714.723, 453.056 716.188, 456.740 715.913, 457.431 700.652, 495.810 693.785, 500.948 656.384, 528.932 590.141, 551.066 524.278, 557.613 512.000, 558.834 499.722, 557.613 433.859, 551.066 367.616, 528.932 330.215, 500.948 323.348, 495.810 308.087, 457.431 307.812, 456.740 309.277, 453.056 310.345, 455.741 323.348, 488.442 335.139, 497.264 367.616, 521.564 433.859, 543.698 512.000, 551.465 590.141, 543.698 656.384, 521.564 688.861, 497.264 700.652, 488.442 713.655, 455.741 714.723, 453.056 716.188, 449.372  z  M 307.812, 449.372 309.277, 453.056  z" />
         </g>
         <g inkscape:groupmode="layer" id="strokes" inkscape:label="strokes">

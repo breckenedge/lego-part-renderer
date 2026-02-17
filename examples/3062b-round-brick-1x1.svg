@@ -1,7 +1,7 @@
-<?xml version='1.0' encoding='ascii'?>
+<?xml version='1.0' encoding='utf-8'?>
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" version="1.1" width="1024" height="1024">
-    <g id="ViewLayer_Edges" inkscape:groupmode="lineset" inkscape:label="ViewLayer_Edges">
-        <g xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" inkscape:groupmode="layer" inkscape:label="fills" id="fills">
+    <rect width="100%" height="100%" fill="white" /><g id="ViewLayer_Edges" inkscape:groupmode="lineset" inkscape:label="ViewLayer_Edges">
+        <g inkscape:groupmode="layer" inkscape:label="fills" id="fills">
             <path fill_rule="evenodd" stroke="none" fill-opacity="1.0" fill="orange" d=" M 650.989, 179.225 618.374, 154.823 569.570, 138.516 512.000, 132.793 454.430, 138.516 405.626, 154.823 373.011, 179.225 366.502, 195.597 334.710, 206.219 280.352, 246.890 261.276, 294.865 261.276, 707.422 280.352, 755.397 311.421, 778.642 311.421, 815.990 326.682, 854.370 370.168, 886.906 435.240, 908.649 512.000, 916.279 588.760, 908.649 653.832, 886.906 697.318, 854.370 712.579, 815.990 712.579, 778.642 743.648, 755.397 762.724, 707.422 762.724, 294.865 743.648, 246.890 689.290, 206.219 657.498, 195.597 650.989, 179.225  z" />
         </g>
         <g inkscape:groupmode="layer" id="strokes" inkscape:label="strokes">

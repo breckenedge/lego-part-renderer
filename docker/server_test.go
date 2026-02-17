@@ -92,7 +92,7 @@ func TestRenderGoldenFiles(t *testing.T) {
 			}
 
 			if !bytes.Equal(got, golden) {
-				t.Errorf("output for part %s does not match golden file %s\ngot %d bytes, want %d bytes", partNumber, name, len(got), len(golden))
+				t.Fatalf("output for part %s does not match golden file %s\ngot %d bytes, want %d bytes", partNumber, name, len(got), len(golden))
 			}
 		})
 	}

@@ -1,7 +1,7 @@
-<?xml version='1.0' encoding='ascii'?>
+<?xml version='1.0' encoding='utf-8'?>
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" version="1.1" width="1024" height="1024">
-    <g id="ViewLayer_Edges" inkscape:groupmode="lineset" inkscape:label="ViewLayer_Edges">
-        <g xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" inkscape:groupmode="layer" inkscape:label="fills" id="fills">
+    <rect width="100%" height="100%" fill="white" /><g id="ViewLayer_Edges" inkscape:groupmode="lineset" inkscape:label="ViewLayer_Edges">
+        <g inkscape:groupmode="layer" inkscape:label="fills" id="fills">
             <path fill_rule="evenodd" stroke="none" fill-opacity="1.0" fill="#e74c3c" d=" M 238.806, 406.472 234.580, 412.105 228.256, 414.119  z" />
             <path fill_rule="evenodd" stroke="none" fill-opacity="1.0" fill="#e74c3c" d=" M 240.290, 398.077 239.441, 402.883  z" />
             <path fill_rule="evenodd" stroke="none" fill-opacity="1.0" fill="#e74c3c" d=" M 322.432, 351.913 371.880, 376.637 332.891, 357.142 322.432, 351.913  z" />
