@@ -1,21 +1,14 @@
 # Project Notes
 
-## Versioning
-
-- Uses semver git tags (e.g. `v1.0.0`)
-- Pushing a `v*` tag triggers the CI workflow which builds/publishes the Docker image and creates a GitHub Release with auto-generated notes
-- Docker image tags match the semver tag (e.g. `ghcr.io/breckenedge/lego-part-renderer:1.0.0`)
-- `latest` tag is updated on every push to `main`
-
-### Release process
-
-```bash
-git tag v1.0.0
-git push origin v1.0.0
-```
-
-CI handles the rest: Docker build, publish to ghcr.io, and GitHub Release creation.
-
 ## Environment
 
 - Docker Desktop is available via WSL2 but may need to be started manually before use
+- The render service starts in a few seconds, don't wait long for it
+
+## Versioning
+
+- Auto-versioning is handled by `.github/workflows/release.yml`
+- On every successful build on main, the patch version is bumped automatically (e.g. v0.0.1 -> v0.0.2)
+- The release workflow creates a tag which triggers the build workflow to publish a Docker image and GitHub Release
+- CHANGELOG.md is updated automatically by the release workflow — do not edit it manually
+- To bump major or minor version, manually create a tag (e.g. `git tag v1.0.0 && git push --tags`) — subsequent auto-releases will increment the patch from there

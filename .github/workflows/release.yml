@@ -1,0 +1,88 @@
+name: Auto Release
+
+on:
+  workflow_run:
+    workflows: ["Build and Publish Docker Image"]
+    types: [completed]
+    branches: [main]
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get latest tag and compute next version
+        id: version
+        run: |
+          LATEST_TAG=$(git tag -l 'v*' --sort=-v:refname | head -n1)
+          if [ -z "$LATEST_TAG" ]; then
+            LATEST_TAG="v0.0.0"
+          fi
+          echo "latest=$LATEST_TAG" >> "$GITHUB_OUTPUT"
+
+          # Bump patch version
+          VERSION="${LATEST_TAG#v}"
+          MAJOR=$(echo "$VERSION" | cut -d. -f1)
+          MINOR=$(echo "$VERSION" | cut -d. -f2)
+          PATCH=$(echo "$VERSION" | cut -d. -f3)
+          NEXT_PATCH=$((PATCH + 1))
+          NEXT_TAG="v${MAJOR}.${MINOR}.${NEXT_PATCH}"
+          echo "next=$NEXT_TAG" >> "$GITHUB_OUTPUT"
+          echo "Bumping $LATEST_TAG -> $NEXT_TAG"
+
+      - name: Generate changelog entry
+        id: changelog
+        run: |
+          LATEST_TAG="${{ steps.version.outputs.latest }}"
+          NEXT_TAG="${{ steps.version.outputs.next }}"
+          DATE=$(date +%Y-%m-%d)
+
+          # Get log since last tag (or all history if no tags exist)
+          if git rev-parse "$LATEST_TAG" >/dev/null 2>&1; then
+            LOG=$(git log "${LATEST_TAG}..HEAD" --pretty=format:"- %s" --no-merges)
+          else
+            LOG=$(git log --pretty=format:"- %s" --no-merges)
+          fi
+
+          ENTRY="## ${NEXT_TAG} (${DATE})"$'\n\n'"${LOG}"
+
+          # Write to temp file for later use
+          echo "$ENTRY" > /tmp/changelog_entry.txt
+
+      - name: Update CHANGELOG.md
+        run: |
+          if [ -f CHANGELOG.md ]; then
+            # Prepend new entry after the header line
+            {
+              head -n 1 CHANGELOG.md
+              echo ""
+              cat /tmp/changelog_entry.txt
+              echo ""
+              tail -n +2 CHANGELOG.md
+            } > CHANGELOG.tmp
+            mv CHANGELOG.tmp CHANGELOG.md
+          else
+            {
+              echo "# Changelog"
+              echo ""
+              cat /tmp/changelog_entry.txt
+            } > CHANGELOG.md
+          fi
+
+      - name: Commit and tag
+        run: |
+          NEXT_TAG="${{ steps.version.outputs.next }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add CHANGELOG.md
+          git commit -m "Release ${NEXT_TAG}"
+          git tag "$NEXT_TAG"
+          git push origin main --tags
