@@ -45,7 +45,7 @@ func TestRenderGoldenFiles(t *testing.T) {
 		"3003":  {2.5, "#e0e0e0", ""},
 		"3020":  {1.5, "red", ""},
 		"3022":  {1.0, "#4a90d9", ""},
-		"3024":  {0.5, "currentColor", "cyan"},
+		"3024":  {2.0, "currentColor", "cyan"},
 		"3039":  {2.0, "white", ""},
 		"3045":  {3.5, "#2ecc71", ""},
 		"3062b": {1.5, "orange", ""},
