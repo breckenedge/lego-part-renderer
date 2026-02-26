@@ -78,7 +78,7 @@ Renders an LDraw part as an SVG line drawing.
 | `partNumber` | string | yes | | LDraw part number (e.g. `"3001"`, `"3062b"`) |
 | `thickness` | float | no | `2.0` | Line thickness in pixels (0.5 - 20.0) |
 | `fillColor` | string | no | `white` | Fill color for object shapes (any CSS color value) |
-| `fillOpacity` | float | no | `1.0` | Fill opacity (0.0–1.0). Values below 1.0 enable transparent/translucent rendering: occluded edges become visible, dimmed proportionally to the opacity. Use `0.0` for fully transparent (glass-like) parts. |
+| `fillOpacity` | float | no | `1.0` | Fill opacity (0.0–1.0). Omitting the field is equivalent to `1.0` (fully opaque). Values below `1.0` enable translucent rendering: occluded edges become visible, dimmed proportionally to the opacity. `0.0` renders fully transparent (glass-like) parts with hidden edges at full opacity. |
 | `strokeColor` | string | no | `currentColor` | Stroke color for lines (any CSS color value) |
 
 The following values are currently hardcoded and not yet configurable via the API ([#2](https://github.com/breckenedge/lego-part-renderer/issues/2)):
