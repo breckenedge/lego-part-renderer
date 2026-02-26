@@ -29,6 +29,17 @@ High-performance HTTP API for rendering LDraw LEGO parts as SVG line drawings.
   </tr>
 </table>
 
+## Transparent and Translucent Parts
+
+Set `fillOpacity` below `1.0` to render parts with transparency. Occluded edges that would normally be invisible are shown at a dimmed opacity proportional to the fill transparency:
+
+<table>
+  <tr>
+    <td align="center"><img src="examples/4740-dish-2x2-inverted.svg" width="200"><br><b>Opaque</b><br><code>fillOpacity: 1.0</code></td>
+    <td align="center"><img src="examples/4740-dish-2x2-inverted-translucent.svg" width="200"><br><b>Translucent</b><br><code>fillOpacity: 0.5</code></td>
+  </tr>
+</table>
+
 ## Quick Start
 
 ```bash
