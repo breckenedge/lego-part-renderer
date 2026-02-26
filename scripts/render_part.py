@@ -4,7 +4,7 @@ Render an LDraw part as an SVG line drawing using Blender Freestyle.
 Usage:
     blender --background --python render_part.py -- <input.dat> <output.svg> [ldraw_path] [thickness] \
         [fill_color] [camera_lat] [camera_lon] [res_x] [res_y] [padding] [crease_angle] [edge_types] \
-        [stroke_color]
+        [fill_opacity] [stroke_color]
 
 Arguments:
     input.dat      Path to the LDraw .dat part file
@@ -19,6 +19,7 @@ Arguments:
     padding        Camera framing padding factor (default: 0.03)
     crease_angle   Freestyle crease angle in degrees (default: 135)
     edge_types     Comma-separated edge types (default: silhouette,crease,border)
+    fill_opacity   Fill opacity 0.0-1.0 (default: 1.0); <1.0 enables hidden edge rendering
     stroke_color   Stroke color for lines (default: currentColor)
 """
 
@@ -56,7 +57,8 @@ def parse_args():
         "padding": float(argv[9]) if len(argv) > 9 else 0.03,
         "crease_angle": float(argv[10]) if len(argv) > 10 else 135.0,
         "edge_types": argv[11] if len(argv) > 11 else "silhouette,crease,border",
-        "stroke_color": argv[12] if len(argv) > 12 else "currentColor",
+        "fill_opacity": float(argv[12]) if len(argv) > 12 else 1.0,
+        "stroke_color": argv[13] if len(argv) > 13 else "currentColor",
     }
 
 
@@ -183,7 +185,7 @@ def setup_camera(scene, padding=0.03, camera_lat=30.0, camera_lon=45.0):
     cam_data.shift_y = -center_vy / scale
 
 
-def setup_freestyle(scene, thickness, crease_angle=135.0, edge_types="silhouette,crease,border"):
+def setup_freestyle(scene, thickness, crease_angle=135.0, edge_types="silhouette,crease,border", fill_opacity=1.0):
     """Configure Freestyle for clean line drawing output."""
     scene.render.use_freestyle = True
 
@@ -206,6 +208,7 @@ def setup_freestyle(scene, thickness, crease_angle=135.0, edge_types="silhouette
     lineset.select_external_contour = "external_contour" in enabled
     lineset.select_edge_mark = "edge_mark" in enabled
     lineset.select_material_boundary = "material_boundary" in enabled
+    lineset.select_by_visibility = True
     lineset.visibility = 'VISIBLE'
     lineset.edge_type_combination = 'OR'
     lineset.edge_type_negation = 'INCLUSIVE'
@@ -217,6 +220,33 @@ def setup_freestyle(scene, thickness, crease_angle=135.0, edge_types="silhouette
     ls.alpha = 1.0
     ls.thickness_position = 'CENTER'
 
+    # For transparent/translucent parts, add a second lineset for hidden (occluded) edges.
+    # Hidden edges are dimmed proportionally to fill_opacity (seen through the material).
+    # For fully transparent parts (fill_opacity=0), hidden edges are shown at full opacity.
+    if fill_opacity < 1.0:
+        hidden_lineset = fs_settings.linesets.new("HiddenEdges")
+        hidden_lineset.select_silhouette = "silhouette" in enabled
+        hidden_lineset.select_crease = "crease" in enabled
+        hidden_lineset.select_border = "border" in enabled
+        hidden_lineset.select_contour = "contour" in enabled
+        hidden_lineset.select_external_contour = "external_contour" in enabled
+        hidden_lineset.select_edge_mark = "edge_mark" in enabled
+        hidden_lineset.select_material_boundary = "material_boundary" in enabled
+        hidden_lineset.select_by_visibility = True
+        hidden_lineset.visibility = 'HIDDEN'
+        hidden_lineset.edge_type_combination = 'OR'
+        hidden_lineset.edge_type_negation = 'INCLUSIVE'
+
+        hls = hidden_lineset.linestyle
+        hls.thickness = thickness
+        hls.color = (0.0, 0.0, 0.0)
+        # Fully transparent parts show hidden edges at full opacity;
+        # translucent parts dim hidden edges to match the material's opacity.
+        hls.alpha = 1.0 if fill_opacity == 0.0 else fill_opacity
+        hls.thickness_position = 'CENTER'
+        hls.use_export_strokes = True
+        hls.use_export_fills = False
+
 
 def setup_svg_export(scene, lineset):
     """Configure the Freestyle SVG Exporter addon."""
@@ -226,13 +256,13 @@ def setup_svg_export(scene, lineset):
     scene.svg_export.split_at_invisible = False
     scene.svg_export.line_join_type = 'ROUND'
 
-    # Per-linestyle export settings
+    # Per-linestyle export settings for visible edges
     ls = lineset.linestyle
     ls.use_export_strokes = True
     ls.use_export_fills = True
 
 
-def postprocess_svg(svg_path, fill_color, stroke_color="currentColor"):
+def postprocess_svg(svg_path, fill_color, fill_opacity=1.0, stroke_color="currentColor"):
     """Replace Blender's hardcoded colors with configurable values."""
     with open(svg_path, "r") as f:
         content = f.read()
@@ -243,8 +273,67 @@ def postprocess_svg(svg_path, fill_color, stroke_color="currentColor"):
     # Replace black strokes with the requested stroke color
     content = re.sub(r'stroke="rgb\(0,\s*0,\s*0\)"', f'stroke="{stroke_color}"', content)
 
+    # Apply fill opacity for transparent/translucent parts
+    if fill_opacity < 1.0:
+        content = re.sub(r'fill-opacity="1\.0"', f'fill-opacity="{fill_opacity:.4f}"', content)
+
     with open(svg_path, "w") as f:
         f.write(content)
+
+    # For translucent/transparent parts, reorder SVG groups so HiddenEdges appears
+    # before Edges. SVG renders later elements on top, so hidden edge strokes must
+    # come first to appear behind the semi-transparent fills.
+    if fill_opacity < 1.0:
+        _reorder_svg_hidden_edges(svg_path)
+
+
+def _reorder_svg_hidden_edges(svg_path):
+    """Move HiddenEdges lineset group before Edges group for correct z-ordering.
+
+    Blender outputs HiddenEdges after Edges, which causes hidden edge strokes to
+    render on top of fills. The correct render order is:
+      1. HiddenEdges strokes (behind everything, seen dimly through the fill)
+      2. Edges fills (semi-transparent)
+      3. Edges strokes (on top)
+    """
+    SVG_NS = "http://www.w3.org/2000/svg"
+    ET.register_namespace("", SVG_NS)
+    ET.register_namespace("inkscape", "http://www.inkscape.org/namespaces/inkscape")
+
+    tree = ET.parse(svg_path)
+    root = tree.getroot()
+
+    # Find HiddenEdges and Edges lineset groups by id attribute.
+    # Check HiddenEdges first since "Edges" is a substring of "HiddenEdges".
+    hidden_group = None
+    edges_group = None
+    for child in root:
+        child_id = child.get("id", "")
+        if "HiddenEdges" in child_id:
+            hidden_group = child
+        elif "Edges" in child_id:
+            edges_group = child
+
+    if hidden_group is None or edges_group is None:
+        print("SVG group reordering skipped: HiddenEdges or Edges group not found")
+        return
+
+    children = list(root)
+    hidden_idx = children.index(hidden_group)
+    edges_idx = children.index(edges_group)
+
+    if hidden_idx <= edges_idx:
+        print("SVG group reordering skipped: HiddenEdges already before Edges")
+        return
+
+    # Remove HiddenEdges and reinsert before Edges
+    root.remove(hidden_group)
+    children = list(root)
+    edges_idx = children.index(edges_group)
+    root.insert(edges_idx, hidden_group)
+
+    tree.write(svg_path, xml_declaration=True, encoding="unicode")
+    print("Reordered SVG groups: HiddenEdges moved before Edges for correct z-ordering")
 
 
 def add_svg_background(svg_path):
@@ -325,7 +414,8 @@ def main():
     # Setup Freestyle
     setup_freestyle(scene, args["thickness"],
                     crease_angle=args["crease_angle"],
-                    edge_types=args["edge_types"])
+                    edge_types=args["edge_types"],
+                    fill_opacity=args["fill_opacity"])
 
     # Setup SVG export
     fs_settings = bpy.context.view_layer.freestyle_settings
@@ -349,7 +439,7 @@ def main():
     if os.path.exists(expected_svg):
         if expected_svg != output_svg:
             os.rename(expected_svg, output_svg)
-        postprocess_svg(output_svg, args["fill_color"], args["stroke_color"])
+        postprocess_svg(output_svg, args["fill_color"], args["fill_opacity"], args["stroke_color"])
         print(f"SVG written to: {output_svg}")
     else:
         print(f"Error: expected SVG not found at {expected_svg}")

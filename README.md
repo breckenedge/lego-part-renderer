@@ -29,6 +29,16 @@ High-performance HTTP API for rendering LDraw LEGO parts as SVG line drawings.
   </tr>
 </table>
 
+## Transparent and Translucent Parts
+
+Set `fillOpacity` below `1.0` to render parts with transparency. Occluded edges that would normally be invisible are shown at a dimmed opacity proportional to the fill transparency:
+
+<table>
+  <tr>
+    <td align="center"><img src="examples/4740-dish-2x2-inverted.svg" width="200"><br><b>Translucent</b><br><code>fillOpacity: 0.5</code></td>
+  </tr>
+</table>
+
 ## Quick Start
 
 ```bash
@@ -68,6 +78,7 @@ Renders an LDraw part as an SVG line drawing.
 | `partNumber` | string | yes | | LDraw part number (e.g. `"3001"`, `"3062b"`) |
 | `thickness` | float | no | `2.0` | Line thickness in pixels (0.5 - 20.0) |
 | `fillColor` | string | no | `white` | Fill color for object shapes (any CSS color value) |
+| `fillOpacity` | float | no | `1.0` | Fill opacity (0.0–1.0). Omitting the field is equivalent to `1.0` (fully opaque). Values below `1.0` enable translucent rendering: occluded edges become visible, dimmed proportionally to the opacity. `0.0` renders fully transparent (glass-like) parts with hidden edges at full opacity. |
 | `strokeColor` | string | no | `currentColor` | Stroke color for lines (any CSS color value) |
 
 The following values are currently hardcoded and not yet configurable via the API ([#2](https://github.com/breckenedge/lego-part-renderer/issues/2)):

@@ -37,22 +37,25 @@ func TestRenderGoldenFiles(t *testing.T) {
 	type partParams struct {
 		thickness   float64
 		fillColor   string
+		fillOpacity *float64 // nil omits the field, using server default (1.0)
 		strokeColor string
 	}
+	opacity := func(v float64) *float64 { return &v }
 
+	// Map of filename (without .svg) to render params.
 	params := map[string]partParams{
-		"3001":  {3.0, "white", ""},
-		"3003":  {2.5, "#e0e0e0", ""},
-		"3020":  {1.5, "red", ""},
-		"3022":  {1.0, "#4a90d9", ""},
-		"3024":  {2.0, "currentColor", "cyan"},
-		"3039":  {2.0, "white", ""},
-		"3045":  {3.5, "#2ecc71", ""},
-		"3062b": {1.5, "orange", ""},
-		"4286":  {2.5, "white", ""},
-		"4740":  {1.0, "#9b59b6", ""},
-		"6133":  {4.0, "#e74c3c", ""},
-		"6141":  {0.5, "yellow", ""},
+		"3001-brick-2x4":         {3.0, "white", nil, ""},
+		"3003-brick-2x2":         {2.5, "#e0e0e0", nil, ""},
+		"3020-plate-2x4":         {1.5, "red", nil, ""},
+		"3022-plate-2x2":         {1.0, "#4a90d9", nil, ""},
+		"3024-plate-1x1":         {2.0, "currentColor", nil, "cyan"},
+		"3039-slope-2x2-45":      {2.0, "white", nil, ""},
+		"3045-slope-2x2-double":  {3.5, "#2ecc71", nil, ""},
+		"3062b-round-brick-1x1":  {1.5, "orange", nil, ""},
+		"4286-slope-1x3-33":      {2.5, "white", nil, ""},
+		"4740-dish-2x2-inverted": {1.0, "#9b59b6", opacity(0.5), ""},
+		"6133-dragon-wing":       {4.0, "#e74c3c", nil, ""},
+		"6141-round-plate-1x1":   {0.5, "yellow", nil, ""},
 	}
 
 	for _, entry := range entries {
@@ -61,22 +64,28 @@ func TestRenderGoldenFiles(t *testing.T) {
 			continue
 		}
 
-		partNumber := strings.SplitN(strings.TrimSuffix(name, ".svg"), "-", 2)[0]
-		p := params[partNumber]
+		fileKey := strings.TrimSuffix(name, ".svg")
+		p, ok := params[fileKey]
+		if !ok {
+			t.Logf("Skipping %s: not in golden file test params", name)
+			continue
+		}
+
+		partNumber := strings.SplitN(fileKey, "-", 2)[0]
+
 		if p.thickness == 0 {
 			p.thickness = 2.0
 		}
 		if p.fillColor == "" {
 			p.fillColor = "white"
 		}
-
-		t.Run(partNumber, func(t *testing.T) {
+		t.Run(fileKey, func(t *testing.T) {
 			golden, err := os.ReadFile(filepath.Join(examplesDir, name))
 			if err != nil {
 				t.Fatalf("reading golden file %s: %v", name, err)
 			}
 
-			body, _ := json.Marshal(RenderRequest{PartNumber: partNumber, Thickness: p.thickness, FillColor: p.fillColor, StrokeColor: p.strokeColor})
+			body, _ := json.Marshal(RenderRequest{PartNumber: partNumber, Thickness: p.thickness, FillColor: p.fillColor, FillOpacity: p.fillOpacity, StrokeColor: p.strokeColor})
 			resp, err := http.Post(srv.URL+"/render", "application/json", bytes.NewReader(body))
 			if err != nil {
 				t.Fatalf("POST /render: %v", err)
