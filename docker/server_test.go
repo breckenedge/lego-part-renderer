@@ -41,10 +41,8 @@ func TestRenderGoldenFiles(t *testing.T) {
 	}
 
 	// Map of filename (without .svg) to render params.
-	// To add a translucent golden file, generate it with Blender and add an entry:
-	//   "4740-dish-2x2-inverted-translucent": {1.0, "#9b59b6", 0.5},
 	params := map[string]partParams{
-		"3001-brick-2x4":         {3.0, "white", 0},
+		"3001-brick-2x4":                    {3.0, "white", 0},
 		"3003-brick-2x2":         {2.5, "#e0e0e0", 0},
 		"3020-plate-2x4":         {1.5, "red", 0},
 		"3022-plate-2x2":         {1.0, "#4a90d9", 0},
@@ -53,7 +51,8 @@ func TestRenderGoldenFiles(t *testing.T) {
 		"3045-slope-2x2-double":  {3.5, "#2ecc71", 0},
 		"3062b-round-brick-1x1":  {1.5, "orange", 0},
 		"4286-slope-1x3-33":      {2.5, "white", 0},
-		"4740-dish-2x2-inverted": {1.0, "#9b59b6", 0},
+		"4740-dish-2x2-inverted":             {1.0, "#9b59b6", 0},
+		"4740-dish-2x2-inverted-translucent": {1.0, "#9b59b6", 0.5},
 		"6133-dragon-wing":       {4.0, "#e74c3c", 0},
 		"6141-round-plate-1x1":   {0.5, "yellow", 0},
 	}
