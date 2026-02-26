@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.0.7 (2026-02-26)
+
+- Fix workflow permissions and bot allowlist for Claude-initiated reviews
+
+
 ## v0.0.5 (2026-02-26)
 
 
