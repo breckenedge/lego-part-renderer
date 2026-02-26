@@ -13,13 +13,14 @@ jobs:
       pull-requests: write
       issues: write
       id-token: write
+      workflows: write
     steps:
       - uses: actions/checkout@v4
 
       - uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          claude_args: "--allowedTools 'Bash(git:*) Bash(gh:*) Edit Read Write Grep Glob WebSearch WebFetch' --max-budget-usd 5"
+          claude_args: "--allowedTools 'Bash(git:*) Bash(gh:*) Edit Read Write Grep Glob WebSearch WebFetch Task TodoWrite' --max-budget-usd 5"
           prompt: |
             You are working on an issue in the lego-part-renderer repository.
 
