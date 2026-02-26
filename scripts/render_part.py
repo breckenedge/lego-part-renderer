@@ -4,7 +4,7 @@ Render an LDraw part as an SVG line drawing using Blender Freestyle.
 Usage:
     blender --background --python render_part.py -- <input.dat> <output.svg> [ldraw_path] [thickness] \
         [fill_color] [camera_lat] [camera_lon] [res_x] [res_y] [padding] [crease_angle] [edge_types] \
-        [fill_opacity]
+        [fill_opacity] [stroke_color]
 
 Arguments:
     input.dat      Path to the LDraw .dat part file
@@ -20,6 +20,7 @@ Arguments:
     crease_angle   Freestyle crease angle in degrees (default: 135)
     edge_types     Comma-separated edge types (default: silhouette,crease,border)
     fill_opacity   Fill opacity 0.0-1.0 (default: 1.0); <1.0 enables hidden edge rendering
+    stroke_color   Stroke color for lines (default: currentColor)
 """
 
 import bpy
@@ -57,6 +58,7 @@ def parse_args():
         "crease_angle": float(argv[10]) if len(argv) > 10 else 135.0,
         "edge_types": argv[11] if len(argv) > 11 else "silhouette,crease,border",
         "fill_opacity": float(argv[12]) if len(argv) > 12 else 1.0,
+        "stroke_color": argv[13] if len(argv) > 13 else "currentColor",
     }
 
 
@@ -260,7 +262,7 @@ def setup_svg_export(scene, lineset):
     ls.use_export_fills = True
 
 
-def postprocess_svg(svg_path, fill_color, fill_opacity=1.0):
+def postprocess_svg(svg_path, fill_color, fill_opacity=1.0, stroke_color="currentColor"):
     """Replace Blender's hardcoded colors with configurable values."""
     with open(svg_path, "r") as f:
         content = f.read()
@@ -268,8 +270,8 @@ def postprocess_svg(svg_path, fill_color, fill_opacity=1.0):
     # Replace Blender's white fill (from white material) with the requested fill color
     content = re.sub(r'fill="rgb\(255,\s*255,\s*255\)"', f'fill="{fill_color}"', content)
 
-    # Replace black strokes with currentColor so SVGs adapt to CSS context
-    content = re.sub(r'stroke="rgb\(0,\s*0,\s*0\)"', 'stroke="currentColor"', content)
+    # Replace black strokes with the requested stroke color
+    content = re.sub(r'stroke="rgb\(0,\s*0,\s*0\)"', f'stroke="{stroke_color}"', content)
 
     # Apply fill opacity for transparent/translucent parts
     if fill_opacity < 1.0:
@@ -437,7 +439,7 @@ def main():
     if os.path.exists(expected_svg):
         if expected_svg != output_svg:
             os.rename(expected_svg, output_svg)
-        postprocess_svg(output_svg, args["fill_color"], args["fill_opacity"])
+        postprocess_svg(output_svg, args["fill_color"], args["fill_opacity"], args["stroke_color"])
         print(f"SVG written to: {output_svg}")
     else:
         print(f"Error: expected SVG not found at {expected_svg}")

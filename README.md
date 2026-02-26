@@ -35,8 +35,7 @@ Set `fillOpacity` below `1.0` to render parts with transparency. Occluded edges 
 
 <table>
   <tr>
-    <td align="center"><img src="examples/4740-dish-2x2-inverted.svg" width="200"><br><b>Opaque</b><br><code>fillOpacity: 1.0</code></td>
-    <td align="center"><img src="examples/4740-dish-2x2-inverted-translucent.svg" width="200"><br><b>Translucent</b><br><code>fillOpacity: 0.5</code></td>
+    <td align="center"><img src="examples/4740-dish-2x2-inverted.svg" width="200"><br><b>Translucent</b><br><code>fillOpacity: 0.5</code></td>
   </tr>
 </table>
 
@@ -50,6 +49,12 @@ curl -X POST http://localhost:5346/render \
   -H "Content-Type: application/json" \
   -d '{"partNumber":"3001","thickness":2.0}' \
   --output part.svg
+
+# Render with a custom stroke color
+curl -X POST http://localhost:5346/render \
+  -H "Content-Type: application/json" \
+  -d '{"partNumber":"3024","thickness":2.0,"strokeColor":"cyan"}' \
+  --output 3024-cyan.svg
 ```
 
 ## API
@@ -74,6 +79,7 @@ Renders an LDraw part as an SVG line drawing.
 | `thickness` | float | no | `2.0` | Line thickness in pixels (0.5 - 20.0) |
 | `fillColor` | string | no | `white` | Fill color for object shapes (any CSS color value) |
 | `fillOpacity` | float | no | `1.0` | Fill opacity (0.0–1.0). Values below 1.0 enable transparent/translucent rendering: occluded edges become visible, dimmed proportionally to the opacity. Use `0.0` for fully transparent (glass-like) parts. |
+| `strokeColor` | string | no | `currentColor` | Stroke color for lines (any CSS color value) |
 
 The following values are currently hardcoded and not yet configurable via the API ([#2](https://github.com/breckenedge/lego-part-renderer/issues/2)):
 
