@@ -120,9 +120,9 @@ The following values are currently hardcoded and not yet configurable via the AP
 ```mermaid
 graph LR
     subgraph Container["Docker Container"]
-        Go["Go HTTP Server\n(8MB)"]
-        Blender["Blender\n(subprocess)\n+ Freestyle"]
-        LDraw["LDraw Library\n12,000+ official part files"]
+        Go["Go HTTP Server<br/>(8MB)"]
+        Blender["Blender<br/>(subprocess)<br/>+ Freestyle"]
+        LDraw["LDraw Library<br/>12,000+ official part files"]
         Go -->|spawns| Blender
         Blender -.->|reads| LDraw
     end
