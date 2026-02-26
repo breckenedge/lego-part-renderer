@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.0.6 (2026-02-26)
+
+- feat: increase 3024 stroke thickness 4x to 2.0 for better visibility
+- feat: use cyan strokeColor for 3024 part example in README and tests
+- feat: add strokeColor option for configurable SVG stroke color
+
+
 ## v0.0.5 (2026-02-26)
 
 
