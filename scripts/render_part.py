@@ -3,7 +3,8 @@ Render an LDraw part as an SVG line drawing using Blender Freestyle.
 
 Usage:
     blender --background --python render_part.py -- <input.dat> <output.svg> [ldraw_path] [thickness] \
-        [fill_color] [camera_lat] [camera_lon] [res_x] [res_y] [padding] [crease_angle] [edge_types]
+        [fill_color] [camera_lat] [camera_lon] [res_x] [res_y] [padding] [crease_angle] [edge_types] \
+        [stroke_color]
 
 Arguments:
     input.dat      Path to the LDraw .dat part file
@@ -18,6 +19,7 @@ Arguments:
     padding        Camera framing padding factor (default: 0.03)
     crease_angle   Freestyle crease angle in degrees (default: 135)
     edge_types     Comma-separated edge types (default: silhouette,crease,border)
+    stroke_color   Stroke color for lines (default: currentColor)
 """
 
 import bpy
@@ -54,6 +56,7 @@ def parse_args():
         "padding": float(argv[9]) if len(argv) > 9 else 0.03,
         "crease_angle": float(argv[10]) if len(argv) > 10 else 135.0,
         "edge_types": argv[11] if len(argv) > 11 else "silhouette,crease,border",
+        "stroke_color": argv[12] if len(argv) > 12 else "currentColor",
     }
 
 
@@ -229,7 +232,7 @@ def setup_svg_export(scene, lineset):
     ls.use_export_fills = True
 
 
-def postprocess_svg(svg_path, fill_color):
+def postprocess_svg(svg_path, fill_color, stroke_color="currentColor"):
     """Replace Blender's hardcoded colors with configurable values."""
     with open(svg_path, "r") as f:
         content = f.read()
@@ -237,8 +240,8 @@ def postprocess_svg(svg_path, fill_color):
     # Replace Blender's white fill (from white material) with the requested fill color
     content = re.sub(r'fill="rgb\(255,\s*255,\s*255\)"', f'fill="{fill_color}"', content)
 
-    # Replace black strokes with currentColor so SVGs adapt to CSS context
-    content = re.sub(r'stroke="rgb\(0,\s*0,\s*0\)"', 'stroke="currentColor"', content)
+    # Replace black strokes with the requested stroke color
+    content = re.sub(r'stroke="rgb\(0,\s*0,\s*0\)"', f'stroke="{stroke_color}"', content)
 
     with open(svg_path, "w") as f:
         f.write(content)
@@ -346,7 +349,7 @@ def main():
     if os.path.exists(expected_svg):
         if expected_svg != output_svg:
             os.rename(expected_svg, output_svg)
-        postprocess_svg(output_svg, args["fill_color"])
+        postprocess_svg(output_svg, args["fill_color"], args["stroke_color"])
         print(f"SVG written to: {output_svg}")
     else:
         print(f"Error: expected SVG not found at {expected_svg}")
