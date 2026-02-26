@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.0.4 (2026-02-26)
+
+- Add test-first development guideline to CLAUDE.md
+- Fix Mermaid newlines using <br/> instead of \n
+- Convert architecture diagram to Mermaid
+
+
 ## v0.0.3 (2026-02-26)
 
 
