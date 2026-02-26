@@ -35,23 +35,24 @@ func TestRenderGoldenFiles(t *testing.T) {
 	defer srv.Close()
 
 	type partParams struct {
-		thickness float64
-		fillColor string
+		thickness   float64
+		fillColor   string
+		strokeColor string
 	}
 
 	params := map[string]partParams{
-		"3001":  {3.0, "white"},
-		"3003":  {2.5, "#e0e0e0"},
-		"3020":  {1.5, "red"},
-		"3022":  {1.0, "#4a90d9"},
-		"3024":  {0.5, "currentColor"},
-		"3039":  {2.0, "white"},
-		"3045":  {3.5, "#2ecc71"},
-		"3062b": {1.5, "orange"},
-		"4286":  {2.5, "white"},
-		"4740":  {1.0, "#9b59b6"},
-		"6133":  {4.0, "#e74c3c"},
-		"6141":  {0.5, "yellow"},
+		"3001":  {3.0, "white", ""},
+		"3003":  {2.5, "#e0e0e0", ""},
+		"3020":  {1.5, "red", ""},
+		"3022":  {1.0, "#4a90d9", ""},
+		"3024":  {0.5, "currentColor", "cyan"},
+		"3039":  {2.0, "white", ""},
+		"3045":  {3.5, "#2ecc71", ""},
+		"3062b": {1.5, "orange", ""},
+		"4286":  {2.5, "white", ""},
+		"4740":  {1.0, "#9b59b6", ""},
+		"6133":  {4.0, "#e74c3c", ""},
+		"6141":  {0.5, "yellow", ""},
 	}
 
 	for _, entry := range entries {
@@ -75,7 +76,7 @@ func TestRenderGoldenFiles(t *testing.T) {
 				t.Fatalf("reading golden file %s: %v", name, err)
 			}
 
-			body, _ := json.Marshal(RenderRequest{PartNumber: partNumber, Thickness: p.thickness, FillColor: p.fillColor})
+			body, _ := json.Marshal(RenderRequest{PartNumber: partNumber, Thickness: p.thickness, FillColor: p.fillColor, StrokeColor: p.strokeColor})
 			resp, err := http.Post(srv.URL+"/render", "application/json", bytes.NewReader(body))
 			if err != nil {
 				t.Fatalf("POST /render: %v", err)

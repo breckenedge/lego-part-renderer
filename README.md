@@ -39,6 +39,12 @@ curl -X POST http://localhost:5346/render \
   -H "Content-Type: application/json" \
   -d '{"partNumber":"3001","thickness":2.0}' \
   --output part.svg
+
+# Render with a custom stroke color
+curl -X POST http://localhost:5346/render \
+  -H "Content-Type: application/json" \
+  -d '{"partNumber":"3024","thickness":0.5,"strokeColor":"cyan"}' \
+  --output 3024-cyan.svg
 ```
 
 ## API
