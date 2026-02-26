@@ -1,0 +1,41 @@
+name: Issue Handler
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  handle-issue:
+    if: github.event.issue.user.login == 'breckenedge' || github.event.issue.user.login == 'bockets'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          claude_args: "--allowedTools 'Bash(git:*) Bash(gh:*) Edit Read Write Grep Glob WebSearch WebFetch' --max-budget-usd 5"
+          prompt: |
+            You are working on an issue in the lego-part-renderer repository.
+
+            Issue #${{ github.event.issue.number }}: ${{ github.event.issue.title }}
+
+            Issue body:
+            ${{ github.event.issue.body }}
+
+            Your job:
+            1. Read CLAUDE.md and any other relevant files to understand the project architecture and conventions
+            2. Understand what the issue is asking for
+            3. Make the necessary changes to implement it
+            4. Open a PR referencing issue #${{ github.event.issue.number }} with your changes
+
+            Rules:
+            - Stay focused on what the issue actually asks for — don't over-engineer
+            - Follow all existing conventions in the repo (Go server, Blender Python script, Docker setup)
+            - Do not edit CHANGELOG.md
+            - Title the PR to match the issue's intent
