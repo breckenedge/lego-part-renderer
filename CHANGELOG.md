@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.0.3 (2026-02-26)
+
+
+
+
 ## v0.0.2 (2026-02-26)
 
 - Add issue handler workflow to auto-create PRs from issues
