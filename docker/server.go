@@ -39,6 +39,7 @@ type RenderRequest struct {
 	PartNumber      string     `json:"partNumber"`
 	Thickness       float64    `json:"thickness"`
 	FillColor       string     `json:"fillColor"`
+	FillOpacity     *float64   `json:"fillOpacity"`
 	CameraLatitude  *float64   `json:"cameraLatitude"`
 	CameraLongitude *float64   `json:"cameraLongitude"`
 	ResolutionX     *int       `json:"resolutionX"`
@@ -155,6 +156,15 @@ func handleRender(w http.ResponseWriter, r *http.Request) {
 		req.FillColor = "white"
 	}
 
+	fillOpacity := 1.0
+	if req.FillOpacity != nil {
+		fillOpacity = *req.FillOpacity
+	}
+	if fillOpacity < 0 || fillOpacity > 1.0 {
+		sendError(w, http.StatusBadRequest, "fillOpacity must be between 0 and 1", "")
+		return
+	}
+
 	// Apply defaults for optional fields
 	cameraLat := 30.0
 	if req.CameraLatitude != nil {
@@ -239,8 +249,8 @@ func handleRender(w http.ResponseWriter, r *http.Request) {
 	defer os.Remove(outputPath)
 
 	// Render with Blender
-	log.Printf("Rendering %s (thickness=%.1f, camera=%.1f/%.1f, res=%dx%d, padding=%.3f, crease=%.1f, edges=%s)",
-		req.PartNumber, req.Thickness, cameraLat, cameraLon, resX, resY, padding, creaseAngle, edgeTypes)
+	log.Printf("Rendering %s (thickness=%.1f, camera=%.1f/%.1f, res=%dx%d, padding=%.3f, crease=%.1f, edges=%s, fillOpacity=%.2f)",
+		req.PartNumber, req.Thickness, cameraLat, cameraLon, resX, resY, padding, creaseAngle, edgeTypes, fillOpacity)
 	renderStart := time.Now()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
@@ -263,6 +273,7 @@ func handleRender(w http.ResponseWriter, r *http.Request) {
 		fmt.Sprintf("%f", padding),
 		fmt.Sprintf("%f", creaseAngle),
 		edgeTypes,
+		fmt.Sprintf("%f", fillOpacity),
 	)
 
 	var stderr bytes.Buffer
