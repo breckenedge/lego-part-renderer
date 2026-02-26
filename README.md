@@ -117,19 +117,15 @@ The following values are currently hardcoded and not yet configurable via the AP
 
 ## Architecture
 
-```
-┌──────────────────────────────────────────────────┐
-│  Docker Container                                │
-│                                                  │
-│  ┌──────────────┐      ┌─────────────────┐       │
-│  │   Go HTTP    │─────>│    Blender      │       │
-│  │   Server     │      │  (subprocess)   │       │
-│  │   (8MB)      │      │  + Freestyle    │       │
-│  └──────────────┘      └─────────────────┘       │
-│                                                  │
-│  LDraw Library: 12,000+ official part files      │
-│                                                  │
-└──────────────────────────────────────────────────┘
+```mermaid
+graph LR
+    subgraph Container["Docker Container"]
+        Go["Go HTTP Server\n(8MB)"]
+        Blender["Blender\n(subprocess)\n+ Freestyle"]
+        LDraw["LDraw Library\n12,000+ official part files"]
+        Go -->|spawns| Blender
+        Blender -.->|reads| LDraw
+    end
 ```
 
 - **Go**: Handles HTTP, validates input, spawns Blender, returns SVG
