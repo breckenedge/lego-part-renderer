@@ -39,6 +39,7 @@ type RenderRequest struct {
 	PartNumber      string     `json:"partNumber"`
 	Thickness       float64    `json:"thickness"`
 	FillColor       string     `json:"fillColor"`
+	StrokeColor     string     `json:"strokeColor"`
 	CameraLatitude  *float64   `json:"cameraLatitude"`
 	CameraLongitude *float64   `json:"cameraLongitude"`
 	ResolutionX     *int       `json:"resolutionX"`
@@ -155,6 +156,10 @@ func handleRender(w http.ResponseWriter, r *http.Request) {
 		req.FillColor = "white"
 	}
 
+	if req.StrokeColor == "" {
+		req.StrokeColor = "currentColor"
+	}
+
 	// Apply defaults for optional fields
 	cameraLat := 30.0
 	if req.CameraLatitude != nil {
@@ -239,8 +244,8 @@ func handleRender(w http.ResponseWriter, r *http.Request) {
 	defer os.Remove(outputPath)
 
 	// Render with Blender
-	log.Printf("Rendering %s (thickness=%.1f, camera=%.1f/%.1f, res=%dx%d, padding=%.3f, crease=%.1f, edges=%s)",
-		req.PartNumber, req.Thickness, cameraLat, cameraLon, resX, resY, padding, creaseAngle, edgeTypes)
+	log.Printf("Rendering %s (thickness=%.1f, camera=%.1f/%.1f, res=%dx%d, padding=%.3f, crease=%.1f, edges=%s, fill=%s, stroke=%s)",
+		req.PartNumber, req.Thickness, cameraLat, cameraLon, resX, resY, padding, creaseAngle, edgeTypes, req.FillColor, req.StrokeColor)
 	renderStart := time.Now()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
@@ -263,6 +268,7 @@ func handleRender(w http.ResponseWriter, r *http.Request) {
 		fmt.Sprintf("%f", padding),
 		fmt.Sprintf("%f", creaseAngle),
 		edgeTypes,
+		req.StrokeColor,
 	)
 
 	var stderr bytes.Buffer
