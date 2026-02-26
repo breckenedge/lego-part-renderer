@@ -278,6 +278,61 @@ def postprocess_svg(svg_path, fill_color, fill_opacity=1.0):
     with open(svg_path, "w") as f:
         f.write(content)
 
+    # For translucent/transparent parts, reorder SVG groups so HiddenEdges appears
+    # before Edges. SVG renders later elements on top, so hidden edge strokes must
+    # come first to appear behind the semi-transparent fills.
+    if fill_opacity < 1.0:
+        _reorder_svg_hidden_edges(svg_path)
+
+
+def _reorder_svg_hidden_edges(svg_path):
+    """Move HiddenEdges lineset group before Edges group for correct z-ordering.
+
+    Blender outputs HiddenEdges after Edges, which causes hidden edge strokes to
+    render on top of fills. The correct render order is:
+      1. HiddenEdges strokes (behind everything, seen dimly through the fill)
+      2. Edges fills (semi-transparent)
+      3. Edges strokes (on top)
+    """
+    SVG_NS = "http://www.w3.org/2000/svg"
+    ET.register_namespace("", SVG_NS)
+    ET.register_namespace("inkscape", "http://www.inkscape.org/namespaces/inkscape")
+
+    tree = ET.parse(svg_path)
+    root = tree.getroot()
+
+    # Find HiddenEdges and Edges lineset groups by id attribute.
+    # Check HiddenEdges first since "Edges" is a substring of "HiddenEdges".
+    hidden_group = None
+    edges_group = None
+    for child in root:
+        child_id = child.get("id", "")
+        if "HiddenEdges" in child_id:
+            hidden_group = child
+        elif "Edges" in child_id:
+            edges_group = child
+
+    if hidden_group is None or edges_group is None:
+        print("SVG group reordering skipped: HiddenEdges or Edges group not found")
+        return
+
+    children = list(root)
+    hidden_idx = children.index(hidden_group)
+    edges_idx = children.index(edges_group)
+
+    if hidden_idx <= edges_idx:
+        print("SVG group reordering skipped: HiddenEdges already before Edges")
+        return
+
+    # Remove HiddenEdges and reinsert before Edges
+    root.remove(hidden_group)
+    children = list(root)
+    edges_idx = children.index(edges_group)
+    root.insert(edges_idx, hidden_group)
+
+    tree.write(svg_path, xml_declaration=True, encoding="unicode")
+    print("Reordered SVG groups: HiddenEdges moved before Edges for correct z-ordering")
+
 
 def add_svg_background(svg_path):
     """Insert a white background rect as the first child of the SVG root."""
