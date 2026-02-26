@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.0.5 (2026-02-26)
+
+
+
+
 ## v0.0.4 (2026-02-26)
 
 - Add test-first development guideline to CLAUDE.md
