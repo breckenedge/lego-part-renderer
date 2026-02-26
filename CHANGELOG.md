@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.0.8 (2026-02-26)
+
+- docs: clarify fillOpacity semantics — omit vs 0.0 are distinct
+- fix: use *float64 for partParams.fillOpacity to allow opacity 0.0
+- fix: align golden file test params map indentation
+- feat: regenerate translucent SVG with Blender and enable golden file test
+- fix: reorder SVG groups for correct z-ordering in translucent renders
+- feat: add translucent render of part 4740 to README preview
+- feat: add fillOpacity parameter for transparent/translucent part rendering
+
+
 ## v0.0.5 (2026-02-26)
 
 
