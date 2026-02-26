@@ -5,6 +5,11 @@
 - Docker Desktop is available via WSL2 but may need to be started manually before use
 - The render service starts in a few seconds, don't wait long for it
 
+## Development
+
+- Always begin feature and debugging development by writing a test first
+- Tests in this project use golden renders — if you change them, ask a human to review the output
+
 ## Versioning
 
 - Auto-versioning is handled by `.github/workflows/release.yml`

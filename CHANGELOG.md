@@ -1,5 +1,29 @@
 # Changelog
 
+## v0.0.5 (2026-02-26)
+
+
+
+
+## v0.0.4 (2026-02-26)
+
+- Add test-first development guideline to CLAUDE.md
+- Fix Mermaid newlines using <br/> instead of \n
+- Convert architecture diagram to Mermaid
+
+
+## v0.0.3 (2026-02-26)
+
+
+
+
+## v0.0.2 (2026-02-26)
+
+- Add issue handler workflow to auto-create PRs from issues
+- "Claude Code Review workflow"
+- "Claude PR Assistant workflow"
+
+
 ## v0.0.1 (2026-02-17)
 
 - Regenerate golden files with fill colors and add test fail-fast
